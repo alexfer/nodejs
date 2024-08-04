@@ -10,7 +10,7 @@ const client = redis.createClient({
 const scan = async (match = '*') => {
     await client.connect();
     console.log('Connected to Redis server...');
-    await client.keys('rgfly_*', function (err, k) {
+    await client.keys('mess:*', function (err, k) {
         if (err) return console.log(err);
 
         for(let i = 0, len = k.length; i < len; i++) {
