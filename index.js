@@ -1,5 +1,4 @@
-let keys = {};
-let cursor = '0';
+let collection = {};
 const redis = require('redis');
 const port = process.env.WEBSOCKET_PORT || 3000;
 const client = redis.createClient({
@@ -7,20 +6,19 @@ const client = redis.createClient({
         path: process.env.REDIS_PATH
     }
 });
+
 const scan = async (match = '*') => {
     await client.connect();
-    console.log('Connected to Redis server...');
-    await client.keys('mess:*', function (err, k) {
-        if (err) return console.log(err);
+    console.info('Connected to Redis server');
+    const keys = await client.sendCommand(["keys", match]);
 
-        for(let i = 0, len = k.length; i < len; i++) {
-            console.log(k[i]);
-            keys[k[i]] = k[i];
-        }
-    });
+    for (const [key, value] of Object.entries(keys)) {
+        const val = await client.get(value);
+        collection[key] = JSON.parse(val);
+    }
+
     await client.quit();
-    console.log('Disconnected!');
-    return keys;
+    console.info('Disconnected');
 }
 
 const WebSocketServer = require('ws').Server
@@ -28,11 +26,13 @@ const WebSocketServer = require('ws').Server
 
 console.log('Server started on port: ' + port);
 
-wss.on('connection', function (ws) {
-    ws.on('message', function (message) {
-        scan('mess_').then((result, keys) => {
-            console.log(result, keys);
-        });
-        ws.send('Websocket server received from client: ' + message);
+wss.onmessage = (event) => {
+    console.log(`Received ${event.data}`);
+};
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+        let data = JSON.parse(message);
+        scan(data.omit + ':*').then(() => console.log(`Scan complete`));
+        ws.send(JSON.stringify(collection));
     });
 });
