@@ -1,11 +1,14 @@
-let collection = {};
 const redis = require('redis');
-const port = process.env.WEBSOCKET_PORT || 3000;
+const port = process.env.WEBSOCKET_PORT;
+const path = process.env.REDIS_PATH;
+
 const client = redis.createClient({
     socket: {
-        path: process.env.REDIS_PATH
+        path: path
     }
 });
+
+let collection = {};
 
 const scan = async (match = '*') => {
     await client.connect();
