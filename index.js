@@ -1,6 +1,6 @@
-const redis = require('redis');
-const { v4: uuidv4 } = require('uuid');
-const WebSocket = require('ws');
+import { v4 as uuidv4 } from 'uuid';
+import WebSocket, { WebSocketServer } from 'ws';
+import redis from 'redis';
 
 const port = process.env.WEBSOCKET_PORT;
 const path = process.env.REDIS_PATH;
@@ -27,7 +27,7 @@ const scan = async (match = '*') => {
     return buffer;
 }
 
-const wss = new WebSocket.Server({port: port});
+const wss = new WebSocketServer({port: port});
 const clients = new Map();
 
 console.log('Server started on port: %d', port);
