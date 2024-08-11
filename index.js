@@ -1,6 +1,6 @@
 import {v4 as uuidv4} from 'uuid';
 import {WebSocketServer} from 'ws';
-import scan from './scanner.js';
+import scanAll from './scanner.js';
 import {Base64} from 'js-base64';
 
 const port = process.env.WEBSOCKET_PORT;
@@ -11,8 +11,6 @@ const wss = new WebSocketServer({
 });
 
 const clients = new Map();
-
-console.log('Server started on port: %d', port);
 
 wss.on('connection', (ws) => {
     ws.on('error', console.error);
@@ -30,7 +28,7 @@ wss.on('connection', (ws) => {
         data.sender = metadata.id;
 
         const processRequest = async (data) => {
-            const result = await scan(data.hash);
+            const result = await scanAll(data.hash);
             const keys = Object.keys(result);
 
             [...clients.keys()].forEach((client) => {
@@ -42,8 +40,10 @@ wss.on('connection', (ws) => {
                     }));
                 }
             });
+
         };
         processRequest(data).then(() => void (0));
     });
 });
-console.log("wss up");
+
+console.log("server started on port: %d", port);
